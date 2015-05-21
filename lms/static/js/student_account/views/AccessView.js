@@ -72,6 +72,10 @@ var edx = edx || {};
             });
 
             this.render();
+
+            // Once the third party error message has been shown once,
+            // there is no need to show it again, if the user changes mode:
+            this.thirdPartyAuth.errorMessage = null;
         },
 
         render: function() {

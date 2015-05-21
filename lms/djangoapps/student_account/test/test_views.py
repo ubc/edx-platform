@@ -352,6 +352,7 @@ class StudentAccountLoginAndRegistrationTest(UrlResetMixin, ModuleStoreTestCase)
                 "currentProvider": current_provider,
                 "providers": providers,
                 "finishAuthUrl": "/auth/complete/{}?".format(current_backend) if current_backend else None,
+                "errorMessage": None,
             })
         )
 

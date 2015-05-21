@@ -362,6 +362,12 @@ def signin_user(request):
     if request.user.is_authenticated():
         return redirect(redirect_to)
 
+    third_party_auth_error = None
+    for msg in messages.get_messages(request):
+        if msg.extra_tags.split()[0] == "social-auth":
+            third_party_auth_error = unicode(msg)
+            break
+
     context = {
         'login_redirect_url': redirect_to,  # This gets added to the query string of the "Sign In" button in the header
         # Bool injected into JS to submit form if we're inside a running third-
@@ -373,6 +379,7 @@ def signin_user(request):
             'platform_name',
             settings.PLATFORM_NAME
         ),
+        'third_party_auth_error': third_party_auth_error
     }
 
     return render_to_response('login.html', context)

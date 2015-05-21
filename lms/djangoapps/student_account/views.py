@@ -165,6 +165,7 @@ def _third_party_auth_context(request, redirect_to):
         "currentProvider": None,
         "providers": [],
         "finishAuthUrl": None,
+        "errorMessage": None,
     }
 
     if third_party_auth.is_enabled():
@@ -193,6 +194,12 @@ def _third_party_auth_context(request, redirect_to):
             )
             context["currentProvider"] = current_provider.NAME
             context["finishAuthUrl"] = pipeline.get_complete_url(current_provider.BACKEND_CLASS.name)
+
+        # Check for any error messages we may want to display:
+        for msg in messages.get_messages(request):
+            if msg.extra_tags.split()[0] == "social-auth":
+                context['errorMessage'] = unicode(msg)
+                break
 
     return context
 
