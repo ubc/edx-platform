@@ -17,6 +17,9 @@ PLATFORM_NAME = ENV_TOKENS.get('PLATFORM_NAME', 'Devstack')
 # By default don't use a worker, execute tasks as if they were local functions
 CELERY_ALWAYS_EAGER = True
 
+# TPA
+FEATURES['ENABLE_THIRD_PARTY_AUTH'] = True
+
 ################################ LOGGERS ######################################
 
 import logging
