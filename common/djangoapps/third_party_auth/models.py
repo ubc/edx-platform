@@ -383,3 +383,41 @@ class SAMLProviderData(models.Model):
 
         cache.set(cls.cache_key_name(entity_id), current, cls.cache_timeout)
         return current
+
+
+class LTIProviderConfig(ProviderConfig):
+    """
+    Configuration required for this edX instance to act as a LTI
+    Tool Provider and allow users to authenticate and be enroled in a
+    course via third party LTI Tool Consumers.
+    """
+    prefix = 'lti'
+    backend_name = 'lti'
+    icon_class = None # This provider is not visible to users
+    KEY_FIELDS = ('lti_consumer_key', )
+
+    lti_consumer_key = models.CharField(
+        max_length=255,
+        help_text=(
+            'The name that the LTI Tool Consumer will use to identify itself'
+        )
+    )
+    lti_consumer_secret = models.CharField(
+        max_length=255,
+        help_text=(
+            'The shared secret that the LTI Tool Consumer will use to '
+            'authenticate requests. Only this edX instance and this '
+            'tool consumer instance should know this value.'
+        )
+    )
+
+    lti_max_timestamp_age = models.IntegerField(
+        default=10,
+        help_text=(
+            'The maximum age of oauth_timestamp values, in seconds.'
+        )
+    )
+
+    class Meta(object):  # pylint: disable=missing-docstring
+        verbose_name = "Provider Configuration (LTI)"
+        verbose_name_plural = verbose_name
