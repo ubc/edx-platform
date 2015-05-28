@@ -185,7 +185,7 @@ def _third_party_auth_context(request, redirect_to):
     }
 
     if third_party_auth.is_enabled():
-        for enabled in third_party_auth.provider.Registry.enabled():
+        for enabled in third_party_auth.provider.Registry.accepting_logins():
             info = {
                 "id": enabled.provider_id,
                 "name": enabled.name,

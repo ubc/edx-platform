@@ -95,6 +95,7 @@ class ProviderConfig(ConfigurationModel):
     )
     prefix = None  # used for provider_id. Set to a string value in subclass
     backend_name = None  # Set to a field or fixed value in subclass
+    accepts_logins = True # Whether to display a sign-in button when the provider is enabled
 
     # "enabled" field is inherited from ConfigurationModel
 
@@ -429,6 +430,7 @@ class LTIProviderConfig(ProviderConfig):
     prefix = 'lti'
     backend_name = 'lti'
     icon_class = None # This provider is not visible to users
+    accepts_logins = False # LTI login cannot be initiated by the tool producer
     KEY_FIELDS = ('lti_consumer_key', )
 
     lti_consumer_key = models.CharField(
