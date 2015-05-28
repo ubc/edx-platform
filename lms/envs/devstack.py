@@ -19,6 +19,10 @@ CELERY_ALWAYS_EAGER = True
 
 # TPA
 FEATURES['ENABLE_THIRD_PARTY_AUTH'] = True
+AUTHENTICATION_BACKENDS = (
+    'social.backends.github.GithubOAuth2',
+    'third_party_auth.lti.LTIAuthBackend',
+) + AUTHENTICATION_BACKENDS
 
 ################################ LOGGERS ######################################
 
