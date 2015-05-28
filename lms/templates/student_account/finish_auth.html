@@ -1,0 +1,52 @@
+<%! from django.utils.translation import ugettext as _ %>
+<%namespace name='static' file='/static_content.html'/>
+<%inherit file="/main.html" />
+
+<%block name="pagetitle">${_("Please Wait")}</%block>
+
+<%block name="js_extra">
+    <script src="${static.url('js/vendor/backbone-min.js')}"></script>
+    ## underscore.string is required by student_account, which we require for window.isExternal() in 'utilities'
+    <script src="${static.url('js/vendor/underscore.string.min.js')}"></script>
+    <%static:js group='student_account'/>
+</%block>
+
+<%block name="headextra">
+
+    <script>
+        (function (require, define) {
+            'use strict';
+            define("js/student_account/views/finish_auth_factory",
+                [
+                    'jquery', 'underscore', 'backbone',
+                    'js/student_account/views/FinishAuthView'
+                ],
+                function ($, _, Backbone, FinishAuthView) {
+                    return function() {
+                        var view = new FinishAuthView({});
+                    };
+                }
+            );
+
+            require(["js/student_account/views/finish_auth_factory"],
+                function (factory) {
+                    factory();
+                }
+            );
+
+        }).call(this, require || RequireJS.require, define || RequireJS.define);
+    </script>
+
+</%block>
+
+<div class="finish-auth">
+    <div class="finish-auth-inner">
+        <h1>${_('Please wait')}</h1>
+
+        <div class="loading-animation"></div>
+
+        <ul id="finish-auth-status">
+            <li>${_('Loading')}</li>
+        </ul>
+    </div>
+</div>

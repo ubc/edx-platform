@@ -46,7 +46,7 @@ If true, it:
 from . import provider
 
 
-_FIELDS_STORED_IN_SESSION = ['auth_entry', 'next', 'enroll_course_id', 'email_opt_in']
+_FIELDS_STORED_IN_SESSION = ['auth_entry', 'next']
 _MIDDLEWARE_CLASSES = (
     'third_party_auth.middleware.ExceptionMiddleware',
 )
@@ -112,7 +112,6 @@ def _set_global_settings(django_settings):
         'social.pipeline.user.user_details',
         'third_party_auth.pipeline.set_logged_in_cookie',
         'third_party_auth.pipeline.login_analytics',
-        'third_party_auth.pipeline.change_enrollment',
     )
 
     # We let the user specify their email address during signup.
@@ -122,6 +121,13 @@ def _set_global_settings(django_settings):
     # instead of a Django error page. During development you may want to
     # enable this when you want to get stack traces rather than redirections.
     django_settings.SOCIAL_AUTH_RAISE_EXCEPTIONS = False
+
+    # Allow users to login using social auth even if their account is not verified yet
+    # The 'ensure_user_information' step controls this and only allows brand new users
+    # to login without verification. Repeat logins are not permitted until the account
+    # gets verified.
+    django_settings.INACTIVE_USER_LOGIN = True
+    django_settings.INACTIVE_USER_URL = '/auth/inactive'
 
     # Context processors required under Django.
     django_settings.SOCIAL_AUTH_UUID_LENGTH = 4
@@ -148,6 +154,9 @@ def _set_provider_settings(django_settings, enabled_providers, auth_info):
 
 def apply_settings(auth_info, django_settings):
     """Applies settings from auth_info dict to django_settings module."""
+    if getattr(django_settings, 'THIRD_PARTY_AUTH_ENABLE_DUMMY_PROVIDER', False):
+        # The Dummy provider is handy for testing and development.
+        from .dummy import DummyProvider  # pylint: disable=unused-variable
     provider_names = auth_info.keys()
     provider.Registry.configure_once(provider_names)
     enabled_providers = provider.Registry.enabled()
