@@ -14,6 +14,7 @@ import logging
 from social.backends.base import BaseAuth
 from social.backends.oauth import BaseOAuth2
 from social.backends.saml import SAMLAuth, SAMLIdentityProvider
+from .lti import LTIAuthBackend
 from social.exceptions import SocialAuthBaseException
 from social.utils import module_member
 
@@ -32,6 +33,7 @@ def _load_backend_classes(base_class=BaseAuth):
 _PSA_BACKENDS = {backend_class.name: backend_class for backend_class in _load_backend_classes()}
 _PSA_OAUTH2_BACKENDS = [backend_class.name for backend_class in _load_backend_classes(BaseOAuth2)]
 _PSA_SAML_BACKENDS = [backend_class.name for backend_class in _load_backend_classes(SAMLAuth)]
+_LTI_BACKENDS = [backend_class.name for backend_class in _load_backend_classes(LTIAuthBackend)]
 
 
 def clean_json(value, of_type):
@@ -95,6 +97,7 @@ class ProviderConfig(ConfigurationModel):
     )
     prefix = None  # used for provider_id. Set to a string value in subclass
     backend_name = None  # Set to a field or fixed value in subclass
+    accepts_logins = True  # Whether to display a sign-in button when the provider is enabled
 
     # "enabled" field is inherited from ConfigurationModel
 
@@ -418,3 +421,47 @@ class SAMLProviderData(models.Model):
 
         cache.set(cls.cache_key_name(entity_id), current, cls.cache_timeout)
         return current
+
+
+class LTIProviderConfig(ProviderConfig):
+    """
+    Configuration required for this edX instance to act as a LTI
+    Tool Provider and allow users to authenticate and be enroled in a
+    course via third party LTI Tool Consumers.
+    """
+    prefix = 'lti'
+    backend_name = 'lti'
+    icon_class = None  # This provider is not visible to users
+    accepts_logins = False  # LTI login cannot be initiated by the tool provider
+    KEY_FIELDS = ('lti_consumer_key', )
+
+    lti_consumer_key = models.CharField(
+        max_length=255,
+        help_text=(
+            'The name that the LTI Tool Consumer will use to identify itself'
+        )
+    )
+    lti_consumer_secret = models.CharField(
+        max_length=255,
+        help_text=(
+            'The shared secret that the LTI Tool Consumer will use to '
+            'authenticate requests. Only this edX instance and this '
+            'tool consumer instance should know this value.'
+        )
+    )
+
+    lti_max_timestamp_age = models.IntegerField(
+        default=10,
+        help_text=(
+            'The maximum age of oauth_timestamp values, in seconds.'
+        )
+    )
+
+    def match_social_auth(self, social_auth):
+        """ Is this provider being used for this UserSocialAuth entry? """
+        prefix = self.lti_consumer_key + ":"
+        return self.backend_name == social_auth.provider and social_auth.uid.startswith(prefix)
+
+    class Meta(object):  # pylint: disable=missing-docstring
+        verbose_name = "Provider Configuration (LTI)"
+        verbose_name_plural = verbose_name

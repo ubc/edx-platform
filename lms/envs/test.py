@@ -244,6 +244,7 @@ AUTHENTICATION_BACKENDS = (
     'social.backends.facebook.FacebookOAuth2',
     'third_party_auth.dummy.DummyBackend',
     'third_party_auth.saml.SAMLAuthBackend',
+    'third_party_auth.lti.LTIAuthBackend',
 ) + AUTHENTICATION_BACKENDS
 
 ################################## OPENID #####################################

@@ -6,11 +6,13 @@ Used by Django and non-Django tests; must not have Django deps.
 
 from contextlib import contextmanager
 from django.conf import settings
+from django.contrib.auth.models import User
 import django.test
 import mock
 import os.path
 
-from third_party_auth.models import OAuth2ProviderConfig, SAMLProviderConfig, SAMLConfiguration, cache as config_cache
+from third_party_auth.models import OAuth2ProviderConfig, SAMLProviderConfig, SAMLConfiguration, \
+    LTIProviderConfig, cache as config_cache
 
 
 AUTH_FEATURES_KEY = 'ENABLE_THIRD_PARTY_AUTH'
@@ -52,6 +54,13 @@ class ThirdPartyAuthTestMixin(object):
         obj.save()
         return obj
 
+    @staticmethod
+    def configure_lti_provider(**kwargs):
+        """ Update the settings for a LTI Tool Consumer third party auth provider """
+        obj = LTIProviderConfig(**kwargs)
+        obj.save()
+        return obj
+
     @classmethod
     def configure_google_provider(cls, **kwargs):
         """ Update the settings for the Google third party auth provider/backend """
@@ -81,6 +90,13 @@ class ThirdPartyAuthTestMixin(object):
         kwargs.setdefault("key", "test")
         kwargs.setdefault("secret", "test")
         return cls.configure_oauth_provider(**kwargs)
+
+    @classmethod
+    def verify_user_email(cls, email):
+        """ Mark the user with the given email as verified """
+        user = User.objects.get(email=email)
+        user.is_active = True
+        user.save()
 
 
 class TestCase(ThirdPartyAuthTestMixin, django.test.TestCase):

@@ -1,7 +1,6 @@
 """
 Third_party_auth integration tests using a mock version of the TestShib provider
 """
-from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 import httpretty
 from mock import patch
@@ -106,7 +105,7 @@ class TestShibIntegrationTest(testutil.SAMLTestCase):
 
         # Now check that we can login again:
         self.client.logout()
-        self._verify_user_email('myself@testshib.org')
+        self.verify_user_email('myself@testshib.org')
         self._test_return_login()
 
     def test_login(self):
@@ -222,9 +221,3 @@ class TestShibIntegrationTest(testutil.SAMLTestCase):
             content_type='application/x-www-form-urlencoded',
             data=self._read_data_file('testshib_response.txt'),
         )
-
-    def _verify_user_email(self, email):
-        """ Mark the user with the given email as verified """
-        user = User.objects.get(email=email)
-        user.is_active = True
-        user.save()
