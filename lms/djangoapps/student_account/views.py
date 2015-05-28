@@ -229,7 +229,7 @@ def _third_party_auth_context(request):
                 "loginUrl": login_urls[enabled.provider_id],
                 "registerUrl": register_urls[enabled.provider_id]
             }
-            for enabled in third_party_auth.provider.Registry.enabled()
+            for enabled in third_party_auth.provider.Registry.accepting_logins()
         ]
 
         running_pipeline = third_party_auth.pipeline.get(request)

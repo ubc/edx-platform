@@ -73,5 +73,5 @@ def auth_pipeline_urls(auth_entry, redirect_url=None, course_id=None, email_opt_
             email_opt_in=email_opt_in,
             redirect_url=pipeline_redirect
         )
-        for provider in provider.Registry.enabled()
+        for provider in provider.Registry.accepting_logins()
     }
