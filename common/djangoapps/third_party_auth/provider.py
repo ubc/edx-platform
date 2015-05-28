@@ -33,6 +33,11 @@ class Registry(object):
         return sorted(cls._enabled_providers(), key=lambda provider: provider.name)
 
     @classmethod
+    def accepting_logins(cls):
+        """Returns list of providers that can be used to initiate logins currently"""
+        return filter(lambda provider: provider.accepts_logins, cls.enabled())
+
+    @classmethod
     def get(cls, provider_id):
         """Gets provider by provider_id string if enabled, else None."""
         if '-' not in provider_id:  # Check format - see models.py:ProviderConfig
