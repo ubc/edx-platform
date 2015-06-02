@@ -425,7 +425,8 @@ def parse_query_params(strategy, response, *args, **kwargs):
 
 
 @partial.partial
-def ensure_user_information(strategy, auth_entry, backend=None, user=None, social=None, *args, **kwargs):
+def ensure_user_information(strategy, auth_entry, backend=None, user=None, social=None,
+                            allow_inactive_user=False, *args, **kwargs):
     """
     Ensure that we have the necessary information about a user (either an
     existing account or registration data) to proceed with the pipeline.
@@ -468,6 +469,10 @@ def ensure_user_information(strategy, auth_entry, backend=None, user=None, socia
 
     if not user.is_active:
         # The user account has not been verified yet.
+        if allow_inactive_user:
+            # This parameter is used by the auth_exchange app, which always allows users to
+            # login, whether or not their account is validated.
+            pass
         # IF the user has just registered a new account as part of this pipeline, that is fine
         # and we allow the login to continue this once, because if we pause again to force the
         # user to activate their account via email, the pipeline may get lost (e.g. email takes
@@ -476,7 +481,7 @@ def ensure_user_information(strategy, auth_entry, backend=None, user=None, socia
         # fully, which is critical.
         # But if this is an existing account, we refuse to allow them to login again until they
         # check their email and activate the account.
-        if social is not None:
+        elif social is not None:
             # This third party account is already linked to a user account. That means that the
             # user's account existed before this pipeline originally began (since the creation
             # of the 'social' link entry occurs in one of the following pipeline steps).

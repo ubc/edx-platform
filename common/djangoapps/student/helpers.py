@@ -4,7 +4,7 @@ from datetime import datetime
 from pytz import UTC
 from django.utils.http import cookie_date
 from django.conf import settings
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse, NoReverseMatch
 import third_party_auth
 import urllib
 from verify_student.models import SoftwareSecurePhotoVerification  # pylint: disable=F0401
@@ -253,11 +253,16 @@ def get_next_url_for_login_page(request):
     Otherwise, we go to the ?next= query param or to the dashboard if nothing else is
     specified.
     """
-    redirect_to = request.GET.get('next', reverse('dashboard'))
+    redirect_to = request.GET.get('next', None)
+    if not redirect_to:
+        try:
+            redirect_to = reverse('dashboard')
+        except NoReverseMatch:
+            redirect_to = reverse('home')
     if 'course_id' in request.GET:
         # Before we redirect to next/dashboard, we need to handle auto-enrollment:
-        params = {param: request.GET[param] for param in POST_AUTH_PARAMS if param in request.GET}
-        params['next'] = redirect_to  # After auto-enrollment, user will be sent to payment page or to this next URL
+        params = [(param, request.GET[param]) for param in POST_AUTH_PARAMS if param in request.GET]
+        params.append(('next', redirect_to))  # After auto-enrollment, user will be sent to payment page or to this URL
         redirect_to = '{}?{}'.format(reverse('finish_auth'), urllib.urlencode(params))
         # Note: if we are resuming a third party auth pipeline, then the next URL will already
         # be saved in the session as part of the pipeline state. That URL will take priority

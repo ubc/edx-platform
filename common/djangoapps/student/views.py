@@ -863,8 +863,9 @@ def accounts_login(request):
     if external_auth_response is not None:
         return external_auth_response
 
-    redirect_to = request.GET.get('next')
+    redirect_to = get_next_url_for_login_page(request)
     context = {
+        'login_redirect_url': redirect_to,
         'pipeline_running': 'false',
         'pipeline_url': auth_pipeline_urls(pipeline.AUTH_ENTRY_LOGIN, redirect_url=redirect_to),
         'platform_name': settings.PLATFORM_NAME,

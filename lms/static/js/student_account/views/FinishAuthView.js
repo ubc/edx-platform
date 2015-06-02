@@ -38,7 +38,7 @@
 
             urls: {
                 finishAuth: '/account/finish_auth',
-                nextUrl: '/dashboard',
+                defaultNextUrl: '/dashboard',
                 payment: '/verify_student/start-flow/',
                 trackSelection: '/course_modes/choose/'
             },
@@ -60,14 +60,13 @@
                 this.enrollmentAction = queryParams.enrollmentAction;
                 this.courseMode = queryParams.courseMode;
                 this.emailOptIn = queryParams.emailOptIn;
+                this.nextUrl = this.urls.defaultNextUrl;
                 if (queryParams.next) {
                     // Ensure that the next URL is internal for security reasons
                     if ( ! window.isExternal( queryParams.next ) ) {
-                        this.urls.nextUrl = queryParams.next;
+                        this.nextUrl = queryParams.next;
                     }
                 }
-
-                this.render();
             },
 
             render: function() {
@@ -76,7 +75,7 @@
                     this.checkEmailOptIn(next);
                 } catch(err) {
                     this.updateTaskDescription(gettext("Error") + ": " + err.message);
-                    this.redirect(this.urls.nextUrl);
+                    this.redirect(this.nextUrl);
                 }
             },
 
@@ -110,7 +109,7 @@
             enrollment: function() {
                 var enrollment = edx.student.account.EnrollmentInterface,
                     shoppingcart = edx.student.account.ShoppingCartInterface,
-                    redirectUrl = this.urls.nextUrl;
+                    redirectUrl = this.nextUrl;
 
                 if ( this.enrollmentAction === 'enroll' && this.courseId ) {
                     this.updateTaskDescription(gettext("Enrolling you in the selected course"));
