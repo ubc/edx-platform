@@ -14,6 +14,7 @@ import logging
 from social.backends.base import BaseAuth
 from social.backends.oauth import BaseOAuth2
 from social.backends.saml import SAMLAuth, SAMLIdentityProvider
+from .lti import LTIAuthBackend
 from social.exceptions import SocialAuthBaseException
 from social.utils import module_member
 
@@ -32,6 +33,7 @@ def _load_backend_classes(base_class=BaseAuth):
 _PSA_BACKENDS = {backend_class.name: backend_class for backend_class in _load_backend_classes()}
 _PSA_OAUTH2_BACKENDS = [backend_class.name for backend_class in _load_backend_classes(BaseOAuth2)]
 _PSA_SAML_BACKENDS = [backend_class.name for backend_class in _load_backend_classes(SAMLAuth)]
+_LTI_BACKENDS = [backend_class.name for backend_class in _load_backend_classes(LTIAuthBackend)]
 
 
 def clean_json(value, of_type):
