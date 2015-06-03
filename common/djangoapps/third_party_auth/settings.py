@@ -154,7 +154,7 @@ def _set_provider_settings(django_settings, enabled_providers, auth_info):
 
 def apply_settings(auth_info, django_settings):
     """Applies settings from auth_info dict to django_settings module."""
-    if getattr(django_settings, 'THIRD_PARTY_AUTH_ENABLE_DUMMY_PROVIDER', False):
+    if django_settings.FEATURES.get('ENABLE_DUMMY_THIRD_PARTY_AUTH_PROVIDER'):
         # The Dummy provider is handy for testing and development.
         from .dummy import DummyProvider  # pylint: disable=unused-variable
     provider_names = auth_info.keys()
