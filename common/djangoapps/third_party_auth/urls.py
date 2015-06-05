@@ -2,10 +2,11 @@
 
 from django.conf.urls import include, patterns, url
 
-from .views import saml_metadata_view
+from .views import saml_metadata_view, lti_login_view
 
 urlpatterns = patterns(
     '',
     url(r'^auth/saml/metadata.xml', saml_metadata_view),
+    url(r'^auth/login/lti/$', lti_login_view),
     url(r'^auth/', include('social.apps.django_app.urls', namespace='social')),
 )

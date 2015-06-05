@@ -3,9 +3,11 @@ Extra views required for SSO
 """
 from django.conf import settings
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseServerError, Http404
+from django.http import HttpResponse, HttpResponseServerError, Http404, HttpResponseNotAllowed
+from django.views.decorators.csrf import csrf_exempt
 from .models import SAMLConfiguration
 from social.apps.django_app.utils import load_strategy, load_backend
+from social.apps.django_app.views import auth, complete
 
 
 def saml_metadata_view(request):
@@ -24,3 +26,15 @@ def saml_metadata_view(request):
     if not errors:
         return HttpResponse(content=metadata, content_type='text/xml')
     return HttpResponseServerError(content=', '.join(errors))
+
+
+@csrf_exempt
+def lti_login_view(request, *args, **kwargs):
+    """This is a combination login/complete due to LTI being a one step login"""
+
+    if request.method != 'POST':
+        return HttpResponseNotAllowed('POST')
+
+    backend = 'lti'
+    auth(request, backend)
+    return complete(request, backend, *args, **kwargs)
