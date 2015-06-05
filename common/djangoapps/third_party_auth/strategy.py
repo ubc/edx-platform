@@ -20,6 +20,8 @@ class SocialStrategy(DjangoStrategy):
         BaseOAuth2 subclasses will call this method for every setting they want to look up.
         SAMLAuthBackend subclasses will call this method only after first checking if the
             setting 'name' is configured via SAMLProviderConfig.
+        LTIAuthBackend subclasses will call this method only after first checking if the
+            setting 'name' is configured via LTIProviderConfig.
         """
         if isinstance(backend, BaseOAuth2):
             provider_config = OAuth2ProviderConfig.current(backend.name)
@@ -29,6 +31,6 @@ class SocialStrategy(DjangoStrategy):
                 return provider_config.get_setting(name)
             except KeyError:
                 pass
-        # At this point, we know 'name' is not set in a [OAuth2|SAML]ProviderConfig row.
+        # At this point, we know 'name' is not set in a [OAuth2|LTI|SAML]ProviderConfig row.
         # It's probably a global Django setting like 'FIELDS_STORED_IN_SESSION':
         return super(SocialStrategy, self).setting(name, default, backend)
