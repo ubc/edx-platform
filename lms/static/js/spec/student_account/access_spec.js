@@ -41,10 +41,10 @@ define([
                         }
                     ]
                 },
-                FORWARD_URL = '/courseware/next',
-                COURSE_KEY = 'edx/DemoX/Fall';
+                FORWARD_URL = '/account/finish_auth?course_id=edx%2FDemoX%2FFall&enrollment_action=enroll&next=%2Fdashboard',
+                THIRD_PARTY_COMPLETE_URL = '/auth/complete/provider/';
 
-            var ajaxSpyAndInitialize = function(that, mode) {
+            var ajaxSpyAndInitialize = function(that, mode, nextUrl, finishAuthUrl) {
                 // Spy on AJAX requests
                 requests = AjaxHelpers.requests(that);
 
@@ -53,8 +53,10 @@ define([
                     mode: mode,
                     thirdPartyAuth: {
                         currentProvider: null,
-                        providers: []
+                        providers: [],
+                        finishAuthUrl: finishAuthUrl
                     },
+                    nextUrl: nextUrl, // undefined for default
                     platformName: 'edX',
                     loginFormDesc: FORM_DESCRIPTION,
                     registrationFormDesc: FORM_DESCRIPTION,
@@ -156,83 +158,6 @@ define([
                 expect($("#password-reset-form")).not.toHaveClass('hidden');
             });
 
-            it('enrolls the user on auth complete', function() {
-                ajaxSpyAndInitialize(this, 'login');
-
-                // Simulate providing enrollment query string params
-                setFakeQueryParams({
-                    '?enrollment_action': 'enroll',
-                    '?course_id': COURSE_KEY
-                });
-
-                // Trigger auth complete on the login view
-                view.subview.login.trigger('auth-complete');
-
-                // Expect that the view tried to enroll the student
-                expect( EnrollmentInterface.enroll ).toHaveBeenCalledWith(
-                    COURSE_KEY,
-                    '/course_modes/choose/' + COURSE_KEY + '/'
-                );
-            });
-
-            it('sends the user to the payment flow when the course mode is not honor', function() {
-                ajaxSpyAndInitialize(this, 'login');
-
-                // Simulate providing enrollment query string params
-                // AND specifying a course mode.
-                setFakeQueryParams({
-                    '?enrollment_action': 'enroll',
-                    '?course_id': COURSE_KEY,
-                    '?course_mode': 'verified'
-                });
-
-                // Trigger auth complete on the login view
-                view.subview.login.trigger('auth-complete');
-
-                // Expect that the view tried to auto-enroll the student
-                // with a redirect into the payment flow.
-                expect( EnrollmentInterface.enroll ).toHaveBeenCalledWith(
-                    COURSE_KEY,
-                    '/verify_student/start-flow/' + COURSE_KEY + '/'
-                );
-            });
-
-            it('sends the user to the student dashboard when the course mode is honor', function() {
-                ajaxSpyAndInitialize(this, 'login');
-
-                // Simulate providing enrollment query string params
-                // AND specifying a course mode.
-                setFakeQueryParams({
-                    '?enrollment_action': 'enroll',
-                    '?course_id': COURSE_KEY,
-                    '?course_mode': 'honor'
-                });
-
-                // Trigger auth complete on the login view
-                view.subview.login.trigger('auth-complete');
-
-                // Expect that the view tried auto-enrolled the student
-                // and sent the student to the dashboard
-                // (skipping the payment flow).
-                expect( EnrollmentInterface.enroll ).toHaveBeenCalledWith(COURSE_KEY, '/dashboard');
-            });
-
-            it('adds a white-label course to the shopping cart on auth complete', function() {
-                ajaxSpyAndInitialize(this, 'register');
-
-                // Simulate providing "add to cart" query string params
-                setFakeQueryParams({
-                    '?enrollment_action': 'add_to_cart',
-                    '?course_id': COURSE_KEY
-                });
-
-                // Trigger auth complete on the register view
-                view.subview.register.trigger('auth-complete');
-
-                // Expect that the view tried to add the course to the user's shopping cart
-                expect( ShoppingCartInterface.addCourseToCart ).toHaveBeenCalledWith( COURSE_KEY );
-            });
-
             it('redirects the user to the dashboard on auth complete', function() {
                 ajaxSpyAndInitialize(this, 'register');
 
@@ -243,11 +168,19 @@ define([
                 expect( view.redirect ).toHaveBeenCalledWith( '/dashboard' );
             });
 
-            it('redirects the user to the next page on auth complete', function() {
-                ajaxSpyAndInitialize(this, 'register');
+            it('proceeds with the third party auth pipeline if active', function() {
+                ajaxSpyAndInitialize(this, 'register', '/', THIRD_PARTY_COMPLETE_URL);
 
-                // Simulate providing a ?next query string parameter
-                setFakeQueryParams({ '?next': FORWARD_URL });
+                // Trigger auth complete
+                view.subview.register.trigger('auth-complete');
+
+                // Verify that we were redirected
+                expect( view.redirect ).toHaveBeenCalledWith( THIRD_PARTY_COMPLETE_URL );
+            });
+
+            it('redirects the user to the next page on auth complete', function() {
+                // The 'next' argument is often used to redirect to the auto-enrollment view
+                ajaxSpyAndInitialize(this, 'register', FORWARD_URL);
 
                 // Trigger auth complete
                 view.subview.register.trigger('auth-complete');
@@ -257,11 +190,7 @@ define([
             });
 
             it('ignores redirect to external URLs', function() {
-                ajaxSpyAndInitialize(this, 'register');
-
-                // Simulate providing a ?next query string parameter
-                // that goes to an external URL
-                setFakeQueryParams({ '?next': "http://www.example.com" });
+                ajaxSpyAndInitialize(this, 'register', "http://www.example.com");
 
                 // Trigger auth complete
                 view.subview.register.trigger('auth-complete');

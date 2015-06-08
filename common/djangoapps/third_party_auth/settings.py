@@ -10,7 +10,7 @@ If true, it:
     b) calls apply_settings(), passing in the Django settings
 """
 
-_FIELDS_STORED_IN_SESSION = ['auth_entry', 'next', 'enroll_course_id', 'email_opt_in']
+_FIELDS_STORED_IN_SESSION = ['auth_entry', 'next']
 _MIDDLEWARE_CLASSES = (
     'third_party_auth.middleware.ExceptionMiddleware',
 )
@@ -58,7 +58,6 @@ def apply_settings(django_settings):
         'social.pipeline.user.user_details',
         'third_party_auth.pipeline.set_logged_in_cookie',
         'third_party_auth.pipeline.login_analytics',
-        'third_party_auth.pipeline.change_enrollment',
     )
 
     # Required so that we can use unmodified PSA OAuth2 backends:
@@ -71,6 +70,13 @@ def apply_settings(django_settings):
     # instead of a Django error page. During development you may want to
     # enable this when you want to get stack traces rather than redirections.
     django_settings.SOCIAL_AUTH_RAISE_EXCEPTIONS = False
+
+    # Allow users to login using social auth even if their account is not verified yet
+    # The 'ensure_user_information' step controls this and only allows brand new users
+    # to login without verification. Repeat logins are not permitted until the account
+    # gets verified.
+    django_settings.INACTIVE_USER_LOGIN = True
+    django_settings.INACTIVE_USER_URL = '/auth/inactive'
 
     # Context processors required under Django.
     django_settings.SOCIAL_AUTH_UUID_LENGTH = 4

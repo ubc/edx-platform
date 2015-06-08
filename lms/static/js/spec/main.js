@@ -453,10 +453,7 @@
                     'js/student_account/models/LoginModel',
                     'js/student_account/models/PasswordResetModel',
                     'js/student_account/models/RegisterModel',
-                    'js/student_account/views/FormView',
-                    'js/student_account/emailoptin',
-                    'js/student_account/enrollment',
-                    'js/student_account/shoppingcart',
+                    'js/student_account/views/FormView'
                 ]
             },
             'js/verify_student/models/verification_model': {
@@ -589,6 +586,7 @@
         'lms/include/js/spec/instructor_dashboard/student_admin_spec.js',
         'lms/include/js/spec/student_account/account_spec.js',
         'lms/include/js/spec/student_account/access_spec.js',
+        'lms/include/js/spec/student_account/finish_auth_spec.js',
         'lms/include/js/spec/student_account/login_spec.js',
         'lms/include/js/spec/student_account/register_spec.js',
         'lms/include/js/spec/student_account/password_reset_spec.js',

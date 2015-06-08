@@ -1,9 +1,10 @@
 """
-Extra views required for SSO
+Extra views required for third party auth
 """
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseServerError, Http404
+from django.shortcuts import redirect
 from .models import SAMLConfiguration
 from social.apps.django_app.utils import load_strategy, load_backend
 
@@ -24,3 +25,14 @@ def saml_metadata_view(request):
     if not errors:
         return HttpResponse(content=metadata, content_type='text/xml')
     return HttpResponseServerError(content=', '.join(errors))
+
+
+def inactive_user_view(request):
+    """
+    A newly registered user has completed the social auth pipeline.
+    Their account is not yet activated, but we let them login this once.
+    """
+    # 'next' may be set to '/account/finish_auth/.../' if this user needs to be auto-enrolled
+    # in a course. Otherwise, just redirect them to the dashboard, which displays a message
+    # about activating their account.
+    return redirect(request.GET.get('next', 'dashboard'))
