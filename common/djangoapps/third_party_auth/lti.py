@@ -5,7 +5,8 @@ import time
 from social.backends.base import BaseAuth
 from social.exceptions import AuthFailed
 from oauthlib.oauth1.rfc5849.signature import normalize_base_string_uri, normalize_parameters, collect_parameters, construct_base_string, sign_hmac_sha1
-from django.contrib.auth import logout
+from django.contrib.auth import REDIRECT_FIELD_NAME, logout
+from social.utils import sanitize_redirect
 
 log = logging.getLogger(__name__)
 
@@ -15,11 +16,16 @@ LTI_PARAMS_KEY = 'tpa-lti-params'
 class LTIAuthBackend(BaseAuth):
     name = 'lti'
 
-    def start(self):
-        # Clean any partial pipeline info before starting the process
+    def start(self, redirect_name=REDIRECT_FIELD_NAME):
+        """
+        Prepare to handle a login request. This method replaces
+        social.actions.do_auth and must be kept in sync with any
+        upstream changes in that method.
+        """
+
+        # Clean any partial pipeline data
         self.strategy.clean_partial_pipeline()
-        # Set auth_entry here since we don't receive that as a parameter
-        self.strategy.session_setdefault('auth_entry', 'login')
+
         # Save validated LTI parameters (or None if invalid or not submitted)
         current_time = calendar.timegm(time.gmtime())
         validated_lti_params = self.get_validated_lti_params(self.strategy, current_time)
@@ -29,8 +35,30 @@ class LTIAuthBackend(BaseAuth):
         else:
             logout(self.strategy.request)
             self.strategy.session_set(LTI_PARAMS_KEY, validated_lti_params)
-        # Return a dummy response for the decorators to work on
-        return self.strategy.html('')
+
+        # Save extra data into session.
+        # While Basic LTI 1.0 specifies that the message is to be signed using OAuth, implying
+        # that any GET parameters should be stripped from the base URL and included as signed
+        # parameters, typical LTI Tool Consumer implementations do not support this behaviour. As
+        # a workaround, we accept TPA parameters from LTI custom parameters prefixed with "tpa_".
+
+        for field_name in self.setting('FIELDS_STORED_IN_SESSION', []):
+            if 'custom_tpa_' + field_name in validated_lti_params:
+                self.strategy.session_set(field_name, validated_lti_params['custom_tpa_' + field_name])
+
+        if 'custom_tpa_' + redirect_name in validated_lti_params:
+            # Check and sanitize a user-defined GET/POST next field value
+            redirect_uri = validated_lti_params['custom_tpa_' + redirect_name]
+            if self.setting('SANITIZE_REDIRECTS', True):
+                redirect_uri = sanitize_redirect(self.strategy.request_host(),
+                                                 redirect_uri)
+            self.strategy.session_set(
+                redirect_name,
+                redirect_uri or self.setting('LOGIN_REDIRECT_URL')
+            )
+
+        # Set a auth_entry here so we don't have to receive that as a custom parameter
+        self.strategy.session_setdefault('auth_entry', 'login')
 
     def auth_complete(self, *args, **kwargs):
         lti_params = self.strategy.session_get(LTI_PARAMS_KEY)

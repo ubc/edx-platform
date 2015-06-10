@@ -6,9 +6,12 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseServerError, Http404, HttpResponseNotAllowed
 from django.shortcuts import redirect
 from django.views.decorators.csrf import csrf_exempt
-from social.apps.django_app.utils import load_strategy, load_backend
-from social.apps.django_app.views import auth, complete
+from social.apps.django_app.views import complete
+from social.apps.django_app.utils import load_strategy, load_backend, psa
+from social.utils import setting_name
 from .models import SAMLConfiguration
+
+URL_NAMESPACE = getattr(settings, setting_name('URL_NAMESPACE'), None) or 'social'
 
 
 def inactive_user_view(request):
@@ -41,12 +44,12 @@ def saml_metadata_view(request):
 
 
 @csrf_exempt
-def lti_login_view(request, *args, **kwargs):
+@psa('{0}:complete'.format(URL_NAMESPACE))
+def lti_login_view(request, backend, *args, **kwargs):
     """This is a combination login/complete due to LTI being a one step login"""
 
     if request.method != 'POST':
         return HttpResponseNotAllowed('POST')
 
-    backend = 'lti'
-    auth(request, backend)
+    request.backend.start()
     return complete(request, backend, *args, **kwargs)
