@@ -8,6 +8,6 @@ urlpatterns = patterns(
     '',
     url(r'^auth/inactive', inactive_user_view),
     url(r'^auth/saml/metadata.xml', saml_metadata_view),
-    url(r'^auth/login/lti/$', lti_login_view),
+    url(r'^auth/login/(?P<backend>lti)/$', lti_login_view),
     url(r'^auth/', include('social.apps.django_app.urls', namespace='social')),
 )
