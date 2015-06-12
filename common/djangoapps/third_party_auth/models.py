@@ -457,6 +457,11 @@ class LTIProviderConfig(ProviderConfig):
         )
     )
 
+    def match_social_auth(self, social_auth):
+        """ Is this provider being used for this UserSocialAuth entry? """
+        prefix = self.lti_consumer_key + ":"
+        return self.backend_name == social_auth.provider and social_auth.uid.startswith(prefix)
+
     class Meta(object):  # pylint: disable=missing-docstring
         verbose_name = "Provider Configuration (LTI)"
         verbose_name_plural = verbose_name
